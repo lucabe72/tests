@@ -1,0 +1,30 @@
+{
+        "resources" : 0,
+        "tasks" : {
+		"task-1" : {
+			"exec" : 30000,
+			"period" : 80000,
+			"deadline" : 80000,
+			"priority" : 4
+		},
+		"task-2" : {
+			"exec" : 35000,
+			"period" : 80000,
+			"deadline" : 80000,
+			"priority" : 5
+		},
+		"task-bad" : {
+			"exec" : 110000,
+			"period" : 170000,
+			"deadline" : 170000,
+			"priority" : 12
+		},
+   },
+        "global" : {
+		"default_policy" : "SCHED_DEADLINE",
+		"duration" : 10,
+                "logdir" : "/tmp/",
+                "log_basename" : "rt-app",
+                "lock_pages" : true
+        }
+    }
