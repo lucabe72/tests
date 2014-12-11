@@ -23,7 +23,7 @@
         "global" : {
 		"default_policy" : "SCHED_DEADLINE",
 		"duration" : 10,
-                "logdir" : "/tmp/",
+                "logdir" : "log",
                 "log_basename" : "rt-app",
                 "lock_pages" : true
         }

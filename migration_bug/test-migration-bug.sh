@@ -9,7 +9,8 @@ EVENTS="sched_wakeup* sched_switch sched_migrate*"
 
 cleanup() {
   trace_stop
-  enable_ac
+  trace_extract
+
   turn_on_cpu 1
   turn_on_cpu 2
   turn_on_cpu 3
@@ -52,9 +53,6 @@ mkdir -p ./log
 ${BENCHMARK} ${TASKSET} >> ${TNAME}.out 2>&1
 
 log "${TNAME} execution finished"
-
-trace_stop
-trace_extract
 
 cleanup
 
