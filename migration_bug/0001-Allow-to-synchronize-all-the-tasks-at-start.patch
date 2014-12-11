@@ -1,0 +1,70 @@
+From 97a056ad6d7a7e2bdaf04f679a57952a52a4136b Mon Sep 17 00:00:00 2001
+From: Luca Abeni <luca.abeni@unitn.it>
+Date: Wed, 10 Dec 2014 14:34:18 +0100
+Subject: [PATCH] Allow to synchronize all the tasks at start
+
+---
+ src/rt-app.c | 27 +++++++++++++++++++++++----
+ 1 file changed, 23 insertions(+), 4 deletions(-)
+
+diff --git a/src/rt-app.c b/src/rt-app.c
+index 3c293e7..eb7bf8b 100644
+--- a/src/rt-app.c
++++ b/src/rt-app.c
+@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ 
+ static int errno;
+ static volatile int continue_running;
++static struct timespec t_zero;
+ static pthread_t *threads;
+ static int nthreads;
+ rtapp_options_t opts;
+@@ -250,10 +251,19 @@ void *thread_body(void *arg)
+ 		}
+ 	}
+ 
++	if (t_zero.tv_sec == 0) {
++		clock_gettime(CLOCK_MONOTONIC, &t_zero);
++		if (opts.ftrace)
++			log_ftrace(ft_data.marker_fd,
++				   "[%d] sets zero time",
++				   data->ind);
++        }
++	t_next = t_zero;
++
+ 	if (data->wait_before_start > 0) {
+ 		log_notice("[%d] Waiting %ld usecs... ", data->ind,
+ 			 data->wait_before_start);
+-		clock_gettime(CLOCK_MONOTONIC, &t);
++		t = t_next;
+ 		t_next = msec_to_timespec(data->wait_before_start);
+ 		t_next = timespec_add(&t, &t_next);
+ 		clock_nanosleep(CLOCK_MONOTONIC,
+@@ -303,12 +313,21 @@ void *thread_body(void *arg)
+ 		}
+ 	}
+ #endif
++	if (opts.ftrace)
++		log_ftrace(ft_data.marker_fd,
++			   "[%d] Waiting 1 sec more... ",
++			   data->ind);
++	t = t_next;
++	t_next = msec_to_timespec(1000LL);
++	t_next = timespec_add(&t, &t_next);
++	clock_nanosleep(CLOCK_MONOTONIC,
++			TIMER_ABSTIME,
++			&t_next,
++			NULL);
+ 
+ 	if (opts.ftrace)
+ 		log_ftrace(ft_data.marker_fd, "[%d] starts", data->ind);
+-	clock_gettime(CLOCK_MONOTONIC, &t);
+-	t_next = t;
+-	data->deadline = timespec_add(&t, &data->deadline);
++	data->deadline = timespec_add(&t_next, &data->deadline);
+ 
+ 	while (continue_running) {
+ 		struct timespec t_start, t_end, t_diff, t_slack;
+-- 
+1.9.1
+
